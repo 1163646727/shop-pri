@@ -33,10 +33,11 @@ import java.util.List;
 @EnableApolloConfig
 public class AppGateWay {
 
-	// 获取config
+	// 手动获取获取远程服务的SwaggerApi,(懒汉式加载)
 	@ApolloConfig
 	private Config config;
 
+	// 注解式获取获取远程服务的SwaggerApi，(饿汉式加载) ChenQi
 	@Value("${pri.zuul.swagger.document}")
 	private String swaggerDocument;
 
@@ -65,7 +66,7 @@ public class AppGateWay {
 		}*/
 
 		// 访问swagger-ui页面的每次都会范围访问一下get方法
-		// 定义value 注解获取和手动获取区别是什么？
+		// 定义value 注解获取和手动获取区别是什么？-->手动是懒汉式，注解式饿汉式
 		@SuppressWarnings("rawtypes")
 		@Override
 		public List<SwaggerResource> get() {
@@ -75,17 +76,24 @@ public class AppGateWay {
 		}
 
 		/**
-		 * 从阿波罗服务器中获取resources
-		 *
-		 * @return
+		 * methodName: resources <BR>
+		 * description:  网关使用服务别名获取远程服务的SwaggerApi <BR>
+		 * remark: <BR>
+		 * param:  <BR>
+		 * return: java.util.List<springfox.documentation.swagger.web.SwaggerResource> <BR>
+		 * author: ChenQi <BR>
+		 * createDate: 2020-02-27 23:17 <BR>
 		 */
 		private List<SwaggerResource> resources() {
 
 			List resources = new ArrayList<>();
 			// app-itmayiedu-order
 			// 网关使用服务别名获取远程服务的SwaggerApi
-			// String swaggerDocJson = swaggerDocument();
-			JSONArray jsonArray = JSONArray.parseArray(swaggerDocument);
+			String swaggerDocJson = swaggerDocument();
+
+			/* 将SwaggerApi转成json数组 ChenQi*/
+            JSONArray jsonArray = JSONArray.parseArray(swaggerDocJson);
+			// JSONArray jsonArray = JSONArray.parseArray(swaggerDocument);
 			for (Object object : jsonArray) {
 				JSONObject jsonObject = (JSONObject) object;
 				String name = jsonObject.getString("name");
@@ -96,8 +104,22 @@ public class AppGateWay {
 			return resources;
 		}
 
+        /**
+         * methodName: swaggerDocument <BR>
+         * description: 网关使用服务别名获取远程服务的SwaggerApi <BR>
+         * remark: <BR>
+         * param:  <BR>
+         * return: java.lang.String <BR>
+         * author: ChenQi <BR>
+         * createDate: 2020-02-27 23:14 <BR>
+         */
+        private String swaggerDocument() {
+            String property = config.getProperty("pri.zuul.swagger.document","");
+            return property;
+        }
 
-		private SwaggerResource swaggerResource(String name, String location, String version) {
+
+        private SwaggerResource swaggerResource(String name, String location, String version) {
 			SwaggerResource swaggerResource = new SwaggerResource();
 			swaggerResource.setName(name);
 			swaggerResource.setLocation(location);
